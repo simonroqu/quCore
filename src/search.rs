@@ -53,6 +53,16 @@ pub struct SearchModal {
 }
 
 impl SearchModal {
+    /// Suchfenster nach `[search]` in `qu.toml`; `app_suggest` liefert die Vorschläge bei `suggestions = "app"`.
+    pub fn from_config(app_suggest: Option<Suggest>, on_search: impl Fn(String) + 'static) -> Rc<Self> {
+        let c = &crate::config().search;
+        let suggest = match c.suggestions.as_str() {
+            "app" => app_suggest.expect("qu.toml: search.suggestions = \"app\", aber die App liefert keine Vorschläge"),
+            _ => from_history(),
+        };
+        Self::new(&c.placeholder, suggest, on_search)
+    }
+
     /// `placeholder`: Text im leeren Feld („Search YouTube“). `suggest`: Vorschläge (`from_history` oder eigene).
     pub fn new(placeholder: &str, suggest: Suggest, on_search: impl Fn(String) + 'static) -> Rc<Self> {
         let entry = gtk::SearchEntry::builder().placeholder_text(placeholder).hexpand(true).search_delay(200).build();

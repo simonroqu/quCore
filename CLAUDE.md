@@ -11,21 +11,74 @@ Bibliothek (Crate `qu-core`, im Code `qu_core`), die alle drei Apps einbinden: `
 
 ```toml
 # Cargo.toml der App
-qu-core = { git = "https://github.com/<user>/quCore", tag = "v0.1.0" }
+qu-core = { git = "https://github.com/simonroqu/quCore", tag = "v0.1.0" }
 ```
 Lokal entwickeln ohne Tag/Push: in `~/.cargo/config.toml` (nicht im Repo)
 ```toml
-[patch."https://github.com/<user>/quCore"]
+[patch."https://github.com/simonroqu/quCore"]
 qu-core = { path = "/home/simon/Work/quCore" }
 ```
-Bis das Repo existiert, binden die Apps `qu-core = { path = "../quCore" }` ein.
+Neuer Stand für die Apps: hier committen, neuen Tag setzen und pushen (`v0.1.1` …), dann in jeder App `tag = …` anheben
+und `cargo update -p qu-core`. Ein Lockfile, das mit der lokalen Umleitung entstand, enthält keine Quelle für qu-core – Cargo
+ergänzt sie beim Bauen ohne Umleitung selbst (geprüft 2026-11-17, auch mit `--release`).
 
 `cargo build && cargo test` hier; danach **alle drei Apps** bauen und testen (`cargo build && cargo test` in jeder).
+
+## Eine Qu-App = `qu.toml` + `style.css` (optional) + eigener Code
+
+```rust
+fn main() -> glib::ExitCode {
+    qu_core::start(include_str!("../qu.toml"), build)   // build: Fenster bauen, gibt Startargument-Handler zurück
+}
+```
+Im `build` der App: `qu_core::style::install(&display, include_str!("style.css"))`, Menü
+`qu_core::navbar::NavBar::new(&qu_core::config().nav)`, Fenster `qu_core::window(app, &root)`, Suche
+`search::SearchModal::from_config(app_suggest, on_search)`. Werte aus der Konfig: `qu_core::config()`.
+
+### `qu.toml` (im Repo der App, beim Bauen eingebettet; `Config::parse` prüft, Tippfehler = Fehler)
+
+```toml
+[app]
+name  = "tubequ"            # Ordner ~/.config/<name> …, Dev-Schalter <NAME>_DEV (eigene Instanz)
+title = "Tubequ"            # Fenstertitel
+id    = "dev.tubequ.Tubequ" # Application-ID / Fensterklasse
+
+[nav]                       # Menü oben links
+top  = ["menu", "back", "home", "search", "busy"]   # eingebaut: back home search busy menu
+menu = ["later", "history", "account"]             # Spalte unter dem Burger (leer = kein Burger)
+
+[[nav.item]]                # eigener Knopf: Icon qu-<icon>-symbolic; Klick hängt die App an navbar.button(id)
+id = "later"
+icon = "later"
+tooltip = "Watch later"
+
+[[nav.item]]                # Slot: leere Box, die App füllt sie (navbar.slot(id)); expands = klappt nach rechts auf
+id = "account"
+slot = true
+expands = true
+
+[search]
+placeholder = "Search YouTube"
+suggestions = "app"         # "history" = gefilterte letzte Suchen, "app" = Vorschläge aus dem App-Code
+```
+Jede App hat einen Test `qu_toml` (in `main.rs`), der die Datei prüft. Neue Felder: in `config.rs` (mit
+`deny_unknown_fields`) und hier dokumentieren; nur Felder anlegen, die der Code auch liest.
+
+### Styling in Schichten
+
+`style::install`: Theme (`APPLICATION`) < Kern-CSS (`+1`) < App-`style.css` (`+2`) < `~/.config/<app>/style.css` (`+3`,
+ohne Neubauen). Spätere Schicht gewinnt immer, unabhängig von der Spezifität. Gemeinsames gehört in `src/style.css`
+hier, nur App-Eigenes ins App-CSS.
 
 ## Aufbau (`src/`)
 
 | Datei | Aufgabe |
 |---|---|
+| `lib.rs` | `start` (Konfig lesen, Name setzen, Absturz-Log `~/.cache/<app>/crash.log`, Einzelinstanz bzw. `<NAME>_DEV`), `window` (Fenster ohne Kopfzeile, Fensterknöpfe außerhalb von Tiling-WMs), `tiling_wm`, `RT`/`bg` (tokio im Hintergrund), `CSS` |
+| `config.rs` | `qu.toml` lesen und prüfen; `qu_core::config()` = Konfig der laufenden App |
+| `navbar.rs` | Menü oben links aus `[nav]`: Knöpfe/Slots, Burger-Spalte, zuklappen nach Auswahl und bei Klick daneben (`close_on_outside_click`), `connect_menu`, Tastatur (`key`: Esc auf, Pfeile wählen, Enter drückt; aufklappende Slots lassen das Menü offen), `nav_button` für weitere Icon-Knöpfe |
+| `busy.rs` | Lade-Kreis (`busy` im Menü): dreht sich, solange ein `Busy` lebt |
+| `style.rs` | Theme, Icons, CSS-Schichten (siehe oben) |
 | `app.rs` | App-Name (`init("aniqu")` als Erstes in `main`; ohne: Programmname) und Ordner: `config_file` (`~/.config/<app>/`), `data_file` (`~/.local/share/<app>/`), `cache_dir` (`~/.cache/<app>/`) |
 | `theme.rs` | Farben aus Omarchy `colors.toml`, Rundung aus Theme-`hyprland.lua`, Live-Reload; Fallback = Farben von „Last Horizon“ |
 | `style.css` | Gemeinsames Layout-CSS (`qu_core::CSS`; Bubbles, Timeline, Suche, Tabs, Platzhalter …), nutzt `--radius-*` aus `theme.rs`. Die App lädt `format!("{}{}", qu_core::CSS, <eigenes CSS>)` |
