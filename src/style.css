@@ -1,0 +1,379 @@
+/* Grundlayout. Farben und Rundungs-Variablen (--radius-*) kommen aus theme.rs. */
+
+/* Buttons: nur das Icon bzw. der Text, ohne Rahmen und Hintergrund.
+   Rückmeldung nur beim Überfahren und Klicken. */
+button {
+  background: none;
+  border: none;
+  box-shadow: none;
+  outline: none;
+}
+
+button:hover {
+  background: alpha(currentColor, 0.1);
+}
+
+button:active {
+  background: alpha(currentColor, 0.2);
+}
+
+/* Umschalter (Tabs): aktiver Tab unterstrichen statt hinterlegt. */
+button:checked {
+  background: none;
+  box-shadow: inset 0 -2px currentColor;
+}
+
+button:checked:hover {
+  background: alpha(currentColor, 0.1);
+}
+
+/* Tabs (Sub/Dub, Sprachen): normale Knöpfe mit dezenter Fläche, der aktive heller. Kein Unterstrich. */
+.tabs > button {
+  padding: 4px 14px;
+  border-radius: var(--radius-s);
+  background: alpha(currentColor, 0.06);
+  box-shadow: none;
+  color: inherit;
+}
+
+.tabs > button:hover {
+  background: alpha(currentColor, 0.12);
+}
+
+.tabs > button:checked,
+.tabs > button:checked:hover {
+  background: alpha(currentColor, 0.2);
+  box-shadow: none;
+  color: inherit;
+}
+
+.avatar {
+  border-radius: 9999px;
+}
+
+/* Kanalname in Karten: sieht aus wie Text, ist aber klickbar. */
+button.channel-link {
+  padding: 0;
+  min-height: 0;
+}
+
+button.channel-link:hover label {
+  text-decoration: underline;
+}
+
+.thumb {
+  border-radius: var(--radius-s);
+}
+
+/* Geschaut-Balken unten im Poster/Thumbnail bzw. in der Episoden-Kachel. */
+progressbar.watched {
+  margin: 0 6px;
+}
+
+progressbar.watched trough,
+progressbar.watched progress {
+  min-height: 4px;
+  border-radius: 2px;
+}
+
+progressbar.watched trough {
+  background: alpha(white, 0.35);
+}
+
+/* Ansehen-Seite */
+.description-box {
+  padding: 12px;
+  border-radius: var(--radius-m);
+  background: alpha(currentColor, 0.06);
+}
+
+.pill {
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: alpha(currentColor, 0.08);
+}
+
+/* ---------- Player-Leiste: Bubble-Design ----------
+   Liegt über dem Video (hell oder dunkel), daher immer dunkles Glas mit weißem Inhalt. */
+
+.player-controls {
+  background: none;
+}
+
+/* Alle Bubbles gleich: gleiche Höhe, gleicher Innenabstand. */
+.bubble {
+  min-height: 32px;
+  padding: 2px;
+  border-radius: var(--radius-pill);
+  color: white;
+  background: rgba(24, 24, 28, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), inset 0 1px rgba(255, 255, 255, 0.10);
+}
+
+.bubble button {
+  color: white;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+  border-radius: var(--radius-pill);
+}
+
+.bubble button:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.bubble button:active {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+/* Maus ruht über dem Player (controls.rs): keine Hover-Hervorhebung, bis sie sich wieder bewegt. */
+.idle .bubble button:hover {
+  background: none;
+}
+
+.bubble label {
+  color: white;
+  margin: 0 8px;
+}
+
+.bubble scale trough {
+  min-height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.bubble scale highlight {
+  min-height: 4px;
+  border-radius: 2px;
+}
+
+.bubble scale slider,
+scale.timeline slider {
+  background: white;
+  border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Timeline: ohne Hintergrund, etwas dicker. Ohne seitlichen Innenabstand des GTK-Themes (12 px),
+   damit sie links und rechts bündig mit den Bubbles darunter abschließt. */
+scale.timeline {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+scale.timeline trough {
+  min-height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+}
+
+scale.timeline highlight {
+  min-height: 6px;
+  border-radius: 3px;
+}
+
+scale.timeline slider {
+  min-width: 14px;
+  min-height: 14px;
+  margin: -4px;
+  border-radius: 9999px;
+}
+
+/* Video mit Kapiteln: Schiene und gespielter Teil zeichnet controls.rs (`segment_layer`) selbst, in
+   Abschnitten mit Lücken. Die eingebauten bleiben nur als unsichtbare Fläche für Klicks/Ziehen. */
+scale.timeline.chapters trough,
+scale.timeline.chapters highlight {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Kapitel-Striche unter der Timeline dezent in Weiß. */
+scale.timeline marks indicator {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Gefüllter Teil von Timeline und Lautstärke: schlicht weiß statt Signalfarbe. */
+.bubble scale highlight,
+scale.timeline highlight {
+  background: white;
+  border: none;
+  margin: 0;
+}
+
+/* ---------- Schwebende Navigation oben links ---------- */
+.nav-bubble {
+  margin: 12px;
+}
+
+/* Nav-Bubble zeichnet ihre Form selbst (nav_shape.rs): kein CSS-Hintergrund, Rand als Padding. */
+.bubble.nav-shape {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 3px;
+  min-height: 0; /* die 32 px hält die obere Reihe (main.rs), sonst zählt die Form das als aufgeklappt */
+}
+
+/* ---------- Suchfenster (wie Spotlight) ---------- */
+.search-backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.search-card {
+  padding: 8px;
+  border-radius: var(--radius-l);
+  color: white;
+  background: rgba(30, 30, 34, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.search-card entry {
+  min-height: 40px;
+  font-size: 1.15em;
+  border: none;
+  box-shadow: none;
+  outline: none;
+  background: none;
+  color: white;
+}
+
+.suggestions {
+  background: none;
+}
+
+.suggestions row {
+  padding: 8px 12px;
+  border-radius: var(--radius-m);
+  color: white;
+}
+
+.suggestions row:hover,
+.suggestions row:focus,
+.suggestions row:selected {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+/* Player mit abgerundeten Ecken wie die Fensterecken (außer im Vollbild, siehe watch.rs). */
+.rounded {
+  border-radius: var(--radius-window);
+}
+
+/* Vorschau über der Timeline (Storyboard-Bild). */
+.preview {
+  border-radius: var(--radius-s);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* Einblendung mitten im Bild (Sprung, Lautstärke, Tempo, Untertitel). */
+.flash {
+  font-size: 1.3em;
+  padding: 8px 18px;
+}
+
+/* Endbildschirm: größere Knöpfe. */
+.end-screen button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Lade-Kreis (icons.rs `spinner`): dreht sich, solange er sichtbar ist. */
+@keyframes qu-spin {
+  to { -gtk-icon-transform: rotate(1turn); }
+}
+
+.qu-spinner {
+  animation: qu-spin 0.8s linear infinite;
+  opacity: 0.8;
+}
+
+/* Miniplayer (watch.rs `set_mini`): Schatten, damit er sich von der Seite darunter abhebt. */
+.mini .rounded {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* Vorschaubilder: grauer Platzhalter in Bildgröße, sanft einblenden (grid.rs `.fade` → `.loaded`),
+   beim Drüberfahren leicht zoomen (abgeschnitten von `.thumb-box`). */
+.thumb-box {
+  border-radius: var(--radius-s);
+  background: alpha(currentColor, 0.06);
+}
+
+.thumb,
+.fade {
+  transition: opacity 250ms ease-out, transform 200ms ease-out;
+}
+
+.fade {
+  opacity: 0;
+}
+
+.fade.loaded {
+  opacity: 1;
+}
+
+flowboxchild:hover .thumb {
+  transform: scale(1.04);
+}
+
+/* Tastatur-Navigation im Raster: dezenter Rahmen um die gewählte Karte. */
+flowboxchild:focus-visible {
+  outline: 2px solid alpha(currentColor, 0.5);
+  outline-offset: 2px;
+}
+
+/* Ansehen-Seite blendet ein (main.rs `Nav::show`); Karte/Kachel → Player und Miniplayer: fly.rs. */
+@keyframes page-in-a {
+  from { opacity: 0; }
+}
+
+@keyframes page-in-b {
+  from { opacity: 0; }
+}
+
+.page-in-a {
+  animation: page-in-a 180ms ease-out;
+}
+
+.page-in-b {
+  animation: page-in-b 180ms ease-out;
+}
+
+
+/* Der (unsichtbare) Scrollbalken im Kontextmenü hat eine Mindesthöhe: Menüs mit einem Eintrag
+   wären sonst unten 16 px zu hoch. */
+popover.menu scrollbar slider { min-height: 0; min-width: 0; }
+
+/* Lade-Platzhalter (`.skeleton`): graue Blöcke in Form des Inhalts, ein heller Streifen läuft von links
+   nach rechts durch. */
+@keyframes qu-shimmer {
+  from { background-position: -150% 0; }
+  to { background-position: 250% 0; }
+}
+
+.skeleton {
+  border-radius: var(--radius-s);
+  background-color: alpha(currentColor, 0.08);
+  background-image: linear-gradient(90deg, transparent, alpha(currentColor, 0.12), transparent);
+  background-size: 50% 100%;
+  background-repeat: no-repeat;
+  animation: qu-shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton.round {
+  border-radius: 9999px;
+}
+
+/* Kanal-Profilbild (Ansehen-Seite, Kanalseite): grauer Kreis, bis es geladen ist. */
+.avatar.placeholder {
+  background: alpha(currentColor, 0.08);
+}
+
+/* Per Tastatur gewählter Knopf (Menü über Esc): wie Hover. */
+.bubble button:focus-visible {
+  background: rgba(255, 255, 255, 0.14);
+  outline: none;
+}
