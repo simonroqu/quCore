@@ -242,9 +242,31 @@ const MPRIS_PLUGIN: &str = "/usr/lib/mpv-mpris/mpris.so";
 
 // GTK4 nutzt unter Wayland (und standardmäßig auch unter X11) EGL.
 // ponytail: nur eglGetProcAddress; Mesa und NVIDIA liefern darüber auch Core-GL-Funktionen.
+#[cfg(not(windows))]
 static EGL: LazyLock<libloading::Library> =
     LazyLock::new(|| unsafe { libloading::Library::new("libEGL.so.1").expect("libEGL.so.1 fehlt") });
 
+// Unter Windows nutzt GTK4 WGL. wglGetProcAddress kennt nur Funktionen ab GL 1.2 (für ältere liefert es
+// 0, 1, 2, 3 oder -1), die alten wie glGetIntegerv stehen direkt in opengl32.dll.
+#[cfg(windows)]
+static GL: LazyLock<libloading::Library> =
+    LazyLock::new(|| unsafe { libloading::Library::new("opengl32.dll").expect("opengl32.dll fehlt") });
+
+#[cfg(windows)]
+fn get_proc_address(_: &(), name: &str) -> *mut c_void {
+    let name = CString::new(name).unwrap();
+    unsafe {
+        let wgl: libloading::Symbol<unsafe extern "system" fn(*const c_char) -> *mut c_void> =
+            GL.get(b"wglGetProcAddress\0").expect("wglGetProcAddress");
+        let p = wgl(name.as_ptr());
+        if !matches!(p as isize, -1..=3) {
+            return p;
+        }
+        GL.get::<*mut c_void>(name.as_bytes_with_nul()).map_or(std::ptr::null_mut(), |s| *s)
+    }
+}
+
+#[cfg(not(windows))]
 fn get_proc_address(_: &(), name: &str) -> *mut c_void {
     let name = CString::new(name).unwrap();
     unsafe {

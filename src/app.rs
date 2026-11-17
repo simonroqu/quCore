@@ -18,6 +18,14 @@ pub fn name() -> &'static str {
     })
 }
 
+// Windows hat weder XDG noch HOME: Einstellungen und Daten nach %APPDATA%\<app>, Cache nach %LOCALAPPDATA%\<app>.
+#[cfg(windows)]
+fn xdg(var: &str, _: &str) -> PathBuf {
+    let win = if var == "XDG_CACHE_HOME" { "LOCALAPPDATA" } else { "APPDATA" };
+    PathBuf::from(std::env::var(win).unwrap_or_default())
+}
+
+#[cfg(not(windows))]
 fn xdg(var: &str, fallback: &str) -> PathBuf {
     std::env::var(var)
         .map(PathBuf::from)
@@ -36,5 +44,5 @@ pub fn data_file(file: &str) -> PathBuf {
 
 /// `~/.cache/<app>/` (Poster, Icons, Shader).
 pub fn cache_dir() -> PathBuf {
-    PathBuf::from(std::env::var("HOME").unwrap_or_default()).join(".cache").join(name())
+    xdg("XDG_CACHE_HOME", ".cache").join(name())
 }
