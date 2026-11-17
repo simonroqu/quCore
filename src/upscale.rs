@@ -5,8 +5,9 @@
 
 use libmpv2::Mpv;
 
-/// Shader-Set für „AI“.
-#[derive(Clone, Copy, Debug, PartialEq)]
+/// Shader-Set für „AI“ (`[player] upscaler` in qu.toml: `fsrcnnx`, `anime4k`).
+#[derive(Clone, Copy, Debug, PartialEq, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Shaders {
     /// FSRCNNX_x2_16-0-4-1 (igv, GPL-3): Filme/Serien/YouTube. Nur Luma von YUV-Videos, ab Vergrößerung > 1,3.
     Fsrcnnx,

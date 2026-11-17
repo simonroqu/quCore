@@ -2,17 +2,26 @@
 //! Suche …), optional `style.css` und ihrem eigenen Code (Datenquelle, Seiten); `start` startet sie.
 
 pub mod app;
+pub mod cards;
 pub mod busy;
 pub mod config;
+pub mod controls;
 pub mod fly;
 pub mod icons;
+mod install;
+pub mod nav;
 pub mod nav_shape;
+pub mod player;
+pub mod progress;
 pub mod navbar;
 pub mod search;
+pub mod segments;
 pub mod smooth;
+pub mod store;
 pub mod style;
 pub mod theme;
 pub mod upscale;
+pub mod watch;
 
 use gtk4 as gtk;
 use gtk::prelude::*;
@@ -41,10 +50,20 @@ thread_local! {
 
 /// App starten: `qu.toml` lesen, Ordner/Name setzen, Absturz-Log, Einzelinstanz (`<NAME>_DEV` = eigene
 /// Instanz daneben). `build` baut das Fenster einmal und liefert, was mit Startargumenten passiert
-/// (`app <link>`/`app <suche>`; auch von weiteren Starts der laufenden App).
-pub fn start(qu_toml: &str, build: fn(&gtk::Application) -> Rc<dyn Fn(Option<String>)>) -> glib::ExitCode {
+/// (`app <link>`/`app <suche>`; auch von weiteren Starts der laufenden App). `icon_svg`: App-Icon für
+/// `app --install` (Programm, Icon und Startmenü-Eintrag für den aktuellen Nutzer).
+pub fn start(qu_toml: &str, icon_svg: &str, build: fn(&gtk::Application) -> Rc<dyn Fn(Option<String>)>) -> glib::ExitCode {
     let cfg = config::set(config::Config::parse(qu_toml).unwrap_or_else(|e| panic!("{e}")));
     app::init(Box::leak(cfg.app.name.clone().into_boxed_str()));
+    if std::env::args().nth(1).as_deref() == Some("--install") {
+        return match install::run(icon_svg) {
+            Ok(()) => glib::ExitCode::SUCCESS,
+            Err(e) => {
+                eprintln!("Installieren fehlgeschlagen: {e}");
+                glib::ExitCode::FAILURE
+            }
+        };
+    }
     // libmpv verlangt LC_NUMERIC=C; ohne setlocale durch GTK bleibt alles auf C.
     gtk::disable_setlocale();
     // Panik-Meldung zusätzlich in ~/.cache/<app>/crash.log: aus dem Startmenü gestartet geht stderr
