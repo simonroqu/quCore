@@ -66,6 +66,10 @@ pub struct Nav<M: Clone + 'static> {
     pub zoom: fly::Zoom,
     /// Knöpfe im Miniplayer (Pause, Ton, Zurück zum Video, Schließen).
     mini_bar: gtk::Box,
+    /// Video im Vollbild (Player-Knopf, `f`). Getrennt vom Fenster-Vollbild (Super+F, Fensterknopf):
+    /// war das Fenster schon vorher im Vollbild, bleibt es das beim Verlassen (`window_was_full`).
+    video_full: Cell<bool>,
+    window_was_full: Cell<bool>,
 }
 
 impl<M: Clone + 'static> Nav<M> {
@@ -160,6 +164,26 @@ impl<M: Clone + 'static> Nav<M> {
             watch,
             zoom,
             mini_bar,
+            video_full: Cell::new(false),
+            window_was_full: Cell::new(false),
+        });
+        player.controls.fullscreen.connect_clicked({
+            let nav = Rc::downgrade(&nav);
+            move |_| {
+                if let Some(nav) = nav.upgrade() {
+                    nav.set_video_fullscreen(!nav.video_fullscreen());
+                }
+            }
+        });
+        // Fenster verlässt das Vollbild von außen (Super+F, Fensterknopf), während das Video es nutzt: Video auch raus.
+        shell.window.connect_fullscreened_notify({
+            let nav = Rc::downgrade(&nav);
+            move |w| {
+                if let Some(nav) = nav.upgrade().filter(|n| n.video_full.get() && !w.is_fullscreen()) {
+                    nav.window_was_full.set(false);
+                    nav.set_video_fullscreen(false);
+                }
+            }
         });
         mini_open.connect_clicked({
             let nav = nav.clone();
@@ -200,7 +224,7 @@ impl<M: Clone + 'static> Nav<M> {
         let appear = watch && (self.current() != "watch" || self.watch.is_mini());
         // Verlässt man die Ansehen-Seite, läuft ein laufendes Video im Miniplayer weiter, sonst stoppt es.
         if self.current() == "watch" && !watch {
-            self.window.unfullscreen();
+            self.set_video_fullscreen(false);
             if self.player.active() {
                 self.set_mini(true);
             } else {
@@ -235,6 +259,27 @@ impl<M: Clone + 'static> Nav<M> {
             self.in_player.set(watch);
         }
         self.nav_bar.set_reveal_child(!watch || self.player.controls.widget.reveals_child() || self.navbar.menu_open());
+    }
+
+    pub fn video_fullscreen(&self) -> bool {
+        self.video_full.get()
+    }
+
+    /// Video-Vollbild an/aus: Player randlos ohne Infos (`WatchFrame::set_fullscreen`), Fenster nur dann ins Vollbild
+    /// und wieder heraus, wenn es nicht schon vorher im Vollbild war.
+    pub fn set_video_fullscreen(&self, on: bool) {
+        if on == self.video_full.get() {
+            return;
+        }
+        self.video_full.set(on);
+        if on {
+            self.window_was_full.set(self.window.is_fullscreen());
+            self.window.fullscreen();
+        } else if !self.window_was_full.get() {
+            self.window.unfullscreen();
+        }
+        self.watch.set_fullscreen(on);
+        self.player.controls.fullscreen.set_icon_name(if on { "qu-restore-symbolic" } else { "qu-fullscreen-symbolic" });
     }
 
     pub fn set_mini(&self, on: bool) {
