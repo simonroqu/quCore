@@ -110,9 +110,22 @@ fun IconButton(icon: ImageVector, label: String, tint: Color = Color.White, size
 class Nav<P : Any>(start: P) {
     val stack = mutableStateListOf(start)
     val page: P get() = stack.last()
+    /** Zählt Neuladen der Startseite; `QuApp` baut die Seite dann neu auf. */
+    var reload by mutableIntStateOf(0)
+        private set
+    private var pending = false
     fun open(p: P) { stack.add(p) }
     fun back() { if (stack.size > 1) stack.removeAt(stack.lastIndex) }
-    fun home() { stack.removeRange(1, stack.size) }
+    /** Home; ist man schon dort, lädt die Startseite neu (wie am Desktop: Knopf der aktuellen Seite = neu laden). */
+    fun home() { if (stack.size == 1) reloadHome() else stack.removeRange(1, stack.size) }
+    /** Zur Startseite und neu laden (z. B. nach dem Anmelden). */
+    fun reloadHome() {
+        stack.removeRange(1, stack.size)
+        pending = true
+        reload++
+    }
+    /** Für die Startseite beim Aufbau: wurde Neuladen verlangt? Nur einmal wahr (Zurückkommen lädt nicht neu). */
+    fun takeReload(): Boolean = pending.also { pending = false }
     /** Aktuelle Seite tauschen (z. B. nächste Episode), ohne den Verlauf zu verlängern. */
     fun replace(p: P) { stack[stack.lastIndex] = p }
 }
@@ -137,7 +150,7 @@ fun <P : Any> QuApp(
     val inner = remember { FocusRequester() }
     Box(Modifier.fillMaxSize()) {
         // key: jede Seite frisch (eigener Zustand, Player wird beim Verlassen freigegeben).
-        key(page) { Box(Modifier.focusRequester(inner).focusGroup()) { content(page) } }
+        key(page, nav.reload) { Box(Modifier.focusRequester(inner).focusGroup()) { content(page) } }
         if (bubble(page)) {
             // Runter: die schwebende Bubble liegt über der Seite, Compose findet von hier aus keinen Weg hinein.
             Row(
