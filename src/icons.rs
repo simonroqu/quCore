@@ -4,7 +4,7 @@
 
 use gtk4 as gtk;
 
-const ICONS: [(&str, &str); 23] = [
+const ICONS: [(&str, &str); 24] = [
     ("qu-account-symbolic", include_str!("../data/icons/qu-account-symbolic.svg")),
     ("qu-back-symbolic", include_str!("../data/icons/qu-back-symbolic.svg")),
     ("qu-close-symbolic", include_str!("../data/icons/qu-close-symbolic.svg")),
@@ -25,6 +25,7 @@ const ICONS: [(&str, &str); 23] = [
     ("qu-subscribed-symbolic", include_str!("../data/icons/qu-subscribed-symbolic.svg")),
     ("qu-subscribe-symbolic", include_str!("../data/icons/qu-subscribe-symbolic.svg")),
     ("qu-subtitles-symbolic", include_str!("../data/icons/qu-subtitles-symbolic.svg")),
+    ("qu-tv-symbolic", include_str!("../data/icons/qu-tv-symbolic.svg")),
     ("qu-volume-symbolic", include_str!("../data/icons/qu-volume-symbolic.svg")),
     ("qu-watchlisted-symbolic", include_str!("../data/icons/qu-watchlisted-symbolic.svg")),
     ("qu-watchlist-symbolic", include_str!("../data/icons/qu-watchlist-symbolic.svg")),

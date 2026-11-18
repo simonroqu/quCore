@@ -31,4 +31,5 @@ object QuIcons {
     val subscribed = icon("M4 2.5h8A3.5 3.5 0 0 1 15.5 6v4a3.5 3.5 0 0 1-3.5 3.5H4A3.5 3.5 0 0 1 .5 10V6A3.5 3.5 0 0 1 4 2.5zm2.5 3.1v4.8L10.5 8z" to true)
     val account = icon("M8 1.5a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5zm0 1.5a1.75 1.75 0 1 1 0 3.5A1.75 1.75 0 0 1 8 3zM8 9c-3 0-5.5 1.6-5.5 4v1.5h11V13c0-2.4-2.5-4-5.5-4zm0 1.5c2.2 0 3.8 1.1 4 2.5H4c.2-1.4 1.8-2.5 4-2.5z" to false)
     val menu = icon("M2 3.3h12v1.4H2zm0 4h12v1.4H2zm0 4h12v1.4H2z" to false)
+    val tv = icon("M2.5 2.5h11a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1zm.3 1.3v6.4h10.4V3.8zM5 13h6v1.2H5z" to true)
 }

@@ -35,6 +35,8 @@ pub struct SearchModal {
     generation: Cell<u64>,
     /// Zuletzt abgeschickte Suche: steht beim nächsten Öffnen wieder im Feld.
     last: std::cell::RefCell<String>,
+    /// Suchverlauf führen und zeigen (false = einfache Eingabe, `input`).
+    history: bool,
 }
 
 impl SearchModal {
@@ -50,6 +52,15 @@ impl SearchModal {
 
     /// `placeholder`: Text im leeren Feld („Search YouTube“). `suggest`: Vorschläge (`from_history` oder eigene).
     pub fn new(placeholder: &str, suggest: Suggest, on_search: impl Fn(String) + 'static) -> Rc<Self> {
+        Self::build(placeholder, suggest, on_search, true)
+    }
+
+    /// Gleiches Fenster als einfache Eingabe (z. B. Code für „Sign in on TV“): ohne Vorschläge, nichts im Suchverlauf.
+    pub fn input(placeholder: &str, on_submit: impl Fn(String) + 'static) -> Rc<Self> {
+        Self::build(placeholder, Rc::new(|_| Box::pin(async { Vec::new() })), on_submit, false)
+    }
+
+    fn build(placeholder: &str, suggest: Suggest, on_search: impl Fn(String) + 'static, history: bool) -> Rc<Self> {
         let entry = gtk::SearchEntry::builder().placeholder_text(placeholder).hexpand(true).search_delay(200).build();
         let list = gtk::ListBox::builder().css_classes(["suggestions"]).visible(false).build();
         let card = gtk::Box::builder()
@@ -69,7 +80,7 @@ impl SearchModal {
         widget.append(&card);
         widget.append(&gtk::Box::builder().hexpand(true).build());
 
-        let modal = Rc::new(SearchModal { widget, entry, list, generation: Cell::new(0), last: Default::default() });
+        let modal = Rc::new(SearchModal { widget, entry, list, generation: Cell::new(0), last: Default::default(), history });
         let on_search: Rc<dyn Fn(String)> = Rc::new(on_search);
 
         let submit = {
@@ -77,8 +88,10 @@ impl SearchModal {
             move |q: String| {
                 let q = q.trim().to_string();
                 if let (false, Some(m)) = (q.is_empty(), modal.upgrade()) {
-                    add_search(&q);
-                    m.last.replace(q.clone());
+                    if history {
+                        add_search(&q);
+                        m.last.replace(q.clone());
+                    }
                     m.close();
                     on_search(q);
                 }
@@ -131,7 +144,7 @@ impl SearchModal {
                 // Leeres Feld oder unveränderte letzte Suche: letzte Suchen statt Vorschlägen
                 // (Öffnen soll keine Anfrage auslösen).
                 if q.is_empty() || q == *m.last.borrow() {
-                    m.fill(searches());
+                    m.fill(m.recent());
                     return;
                 }
                 let list = suggest(q);
@@ -173,9 +186,14 @@ impl SearchModal {
         self.widget.is_visible()
     }
 
+    /// Letzte Suchen (leer bei `input`).
+    fn recent(&self) -> Vec<String> {
+        if self.history { searches() } else { Vec::new() }
+    }
+
     pub fn open(&self) {
         self.entry.set_text(&self.last.borrow());
-        self.fill(searches());
+        self.fill(self.recent());
         self.widget.set_visible(true);
         self.entry.grab_focus();
         // Alles markiert: Weitertippen ersetzt die alte Suche.
