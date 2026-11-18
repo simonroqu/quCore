@@ -19,7 +19,8 @@ for abi in ${ABIS:-arm64-v8a x86_64}; do args="$args -t $abi"; done
 # („Unversioned target triples“, es fehlt __ANDROID_MIN_SDK_VERSION__; 26 = minSdk der Apps). cargo-ndk setzt nur
 # BINDGEN_EXTRA_CLANG_ARGS_<ziel_mit_unterstrichen>; bindgen liest die Form mit Bindestrichen zuerst – daher hier
 # dieselben Pfade wie cargo-ndk plus die Definition (Variablen mit „-“ im Namen nur über `env`).
-sysroot="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
+# Linux: linux-x86_64, macOS: darwin-x86_64 (auch auf Apple Silicon).
+sysroot=$(ls -d "$ANDROID_NDK_HOME"/toolchains/llvm/prebuilt/*/sysroot | head -n1)
 bg() { echo "BINDGEN_EXTRA_CLANG_ARGS_$1=--sysroot=$sysroot -I$sysroot/usr/include/$1 -D__ANDROID_MIN_SDK_VERSION__=26"; }
 # shellcheck disable=SC2086
 env "$(bg aarch64-linux-android)" "$(bg x86_64-linux-android)" \
