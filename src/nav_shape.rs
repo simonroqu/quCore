@@ -44,7 +44,7 @@ mod imp {
             // Spaltenbreite von der Spalte selbst, sonst vom Menü (das mit der unteren Reihe breiter wird).
             let c = self.column.upgrade().and_then(|c| c.compute_bounds(&*obj)).unwrap_or(m);
             let col = c.x() + c.width() + 2.0 * PAD;
-            // Rechte Kante der oberen Reihe: mit unterer Reihe (Tubequ) so breit wie ihr Inhalt, sonst die ganze Box.
+            // Rechte Kante der oberen Reihe: mit unterer Reihe (TubeQu) so breit wie ihr Inhalt, sonst die ganze Box.
             let r = if self.bottom.upgrade().is_some() { t.x() + t.width() + 2.0 * PAD } else { obj.width() as f32 + 2.0 * PAD };
             // Untere Reihe nur, solange das Menü offen ist (sonst liegt sie außerhalb).
             let bottom = self

@@ -242,7 +242,7 @@ const MPRIS_PLUGIN: &str = "/usr/lib/mpv-mpris/mpris.so";
 
 // GTK4 nutzt unter Wayland (und standardmäßig auch unter X11) EGL.
 // ponytail: nur eglGetProcAddress; Mesa und NVIDIA liefern darüber auch Core-GL-Funktionen.
-#[cfg(not(windows))]
+#[cfg(not(any(windows, target_os = "macos")))]
 static EGL: LazyLock<libloading::Library> =
     LazyLock::new(|| unsafe { libloading::Library::new("libEGL.so.1").expect("libEGL.so.1 fehlt") });
 
@@ -266,7 +266,19 @@ fn get_proc_address(_: &(), name: &str) -> *mut c_void {
     }
 }
 
-#[cfg(not(windows))]
+// Unter macOS nutzt GTK4 CGL; alle GL-Funktionen stehen direkt im OpenGL-Framework.
+#[cfg(target_os = "macos")]
+static GL: LazyLock<libloading::Library> = LazyLock::new(|| unsafe {
+    libloading::Library::new("/System/Library/Frameworks/OpenGL.framework/OpenGL").expect("OpenGL.framework fehlt")
+});
+
+#[cfg(target_os = "macos")]
+fn get_proc_address(_: &(), name: &str) -> *mut c_void {
+    let name = CString::new(name).unwrap();
+    unsafe { GL.get::<*mut c_void>(name.as_bytes_with_nul()).map_or(std::ptr::null_mut(), |s| *s) }
+}
+
+#[cfg(not(any(windows, target_os = "macos")))]
 fn get_proc_address(_: &(), name: &str) -> *mut c_void {
     let name = CString::new(name).unwrap();
     unsafe {

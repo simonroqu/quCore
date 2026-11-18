@@ -3,7 +3,7 @@ name = "qu-core"
 version = "0.1.0"
 edition = "2024"
 license = "GPL-3.0-or-later"
-description = "Gemeinsamer Unterbau von AniQu, BoxQu und Tubequ (GTK4 + libmpv)"
+description = "Gemeinsamer Unterbau von AniQu, BoxQu und TubeQu (GTK4 + libmpv)"
 
 [dependencies]
 async-channel = "2"

@@ -1,4 +1,4 @@
-//! Gemeinsamer Unterbau der Qu-Apps (AniQu, BoxQu, Tubequ). Eine App besteht aus `qu.toml` (Name, Menü,
+//! Gemeinsamer Unterbau der Qu-Apps (AniQu, BoxQu, TubeQu). Eine App besteht aus `qu.toml` (Name, Menü,
 //! Suche …), optional `style.css` und ihrem eigenen Code (Datenquelle, Seiten); `start` startet sie.
 
 pub mod app;

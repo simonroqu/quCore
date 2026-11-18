@@ -1,6 +1,7 @@
 //! `<app> --install`: das laufende Programm nach `~/.local/bin/<name>`, Icon und Startmenü-Eintrag
 //! (`~/.local/share/applications/<id>.desktop`) für den aktuellen Nutzer, ohne root. Texte aus `[app]` in
-//! qu.toml. Entfernen: diese drei Dateien löschen.
+//! qu.toml. Entfernen: diese drei Dateien löschen. macOS: `~/Applications/<Titel>.app` und `~/.local/bin/<name>`
+//! als Verweis darauf. Windows: install.ps1 der App (braucht die DLLs daneben).
 
 use std::path::PathBuf;
 
@@ -22,6 +23,7 @@ fn desktop_entry(bin: &str) -> String {
     s + &format!("StartupWMClass={}\nStartupNotify=true\n", a.id)
 }
 
+#[cfg(not(target_os = "macos"))]
 pub fn run(icon_svg: &str) -> Result<(), String> {
     let a = &crate::config().app;
     let home = PathBuf::from(std::env::var("HOME").map_err(|e| e.to_string())?);
@@ -44,5 +46,38 @@ pub fn run(icon_svg: &str) -> Result<(), String> {
     let _ = std::process::Command::new("update-desktop-database").arg("-q").arg(&apps).status();
     println!("Installiert: {}", bin.display());
     println!("Startmenü:   {}", desktop.display());
+    Ok(())
+}
+
+/// macOS: App-Bundle in `~/Applications` (Launchpad/Spotlight), Programm darin, `~/.local/bin/<name>` zeigt darauf.
+// ponytail: ohne Icon (bräuchte .icns aus dem SVG); GTK/mpv bleiben in Homebrew, das Bundle läuft nur auf diesem Mac.
+#[cfg(target_os = "macos")]
+pub fn run(_icon_svg: &str) -> Result<(), String> {
+    let a = &crate::config().app;
+    let home = PathBuf::from(std::env::var("HOME").map_err(|e| e.to_string())?);
+    let app = home.join("Applications").join(format!("{}.app", a.title));
+    let exe = app.join("Contents/MacOS").join(&a.name);
+    let link = home.join(".local/bin").join(&a.name);
+    let me = std::env::current_exe().map_err(|e| e.to_string())?;
+    for dir in [exe.parent().unwrap(), link.parent().unwrap()] {
+        std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+    }
+    if me != exe {
+        let _ = std::fs::remove_file(&exe);
+        std::fs::copy(&me, &exe).map_err(|e| format!("{}: {e}", exe.display()))?;
+    }
+    let plist = format!(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<plist version=\"1.0\"><dict>\n\
+         <key>CFBundleName</key><string>{}</string>\n<key>CFBundleIdentifier</key><string>{}</string>\n\
+         <key>CFBundleExecutable</key><string>{}</string>\n<key>CFBundlePackageType</key><string>APPL</string>\n\
+         <key>NSHighResolutionCapable</key><true/>\n</dict></plist>\n",
+        a.title, a.id, a.name
+    );
+    let info = app.join("Contents/Info.plist");
+    std::fs::write(&info, plist).map_err(|e| format!("{}: {e}", info.display()))?;
+    let _ = std::fs::remove_file(&link);
+    std::os::unix::fs::symlink(&exe, &link).map_err(|e| format!("{}: {e}", link.display()))?;
+    println!("Installiert: {}", app.display());
+    println!("Terminal:    {}", link.display());
     Ok(())
 }

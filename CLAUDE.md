@@ -1,4 +1,4 @@
-# qu-core – gemeinsamer Unterbau von AniQu, BoxQu und Tubequ (Rust + GTK4 + libmpv)
+# qu-core – gemeinsamer Unterbau von AniQu, BoxQu und TubeQu (Rust + GTK4 + libmpv)
 
 Bibliothek (Crate `qu-core`, im Code `qu_core`), die alle drei Apps einbinden: `~/Work/aniqu`, `~/Work/boxqu`,
 `~/Work/tubequ`. Was hier steht, gilt für alle drei – Änderungen hier, nicht in den Apps.
@@ -11,15 +11,16 @@ Bibliothek (Crate `qu-core`, im Code `qu_core`), die alle drei Apps einbinden: `
 
 ```toml
 # Cargo.toml der App
-qu-core = { git = "https://github.com/simonroqu/quCore", tag = "v0.1.0" }
+qu-core = { git = "https://github.com/simonroqu/quCore" }
 ```
-Lokal entwickeln ohne Tag/Push: in `~/.cargo/config.toml` (nicht im Repo)
+Lokal entwickeln ohne Push: in `~/.cargo/config.toml` (nicht im Repo)
 ```toml
 [patch."https://github.com/simonroqu/quCore"]
 qu-core = { path = "/home/simon/Work/quCore" }
 ```
-Neuer Stand für die Apps: hier committen, neuen Tag setzen und pushen (`v0.1.1` …), dann in jeder App `tag = …` anheben
-und `cargo update -p qu-core`. Ein Lockfile, das mit der lokalen Umleitung entstand, enthält keine Quelle für qu-core – Cargo
+Kein Tag: die Apps nehmen den Hauptzweig. Neuer Stand = hier committen und pushen; die Install-Skripte der Apps holen ihn
+per `cargo update -p qu-core` (Cargo.lock hält sonst den alten fest). Achtung: was auf main liegt, landet bei der nächsten
+Installation in allen Apps, also nur Funktionierendes pushen. Ein Lockfile, das mit der lokalen Umleitung entstand, enthält keine Quelle für qu-core – Cargo
 ergänzt sie beim Bauen ohne Umleitung selbst (geprüft 2026-11-17, auch mit `--release`).
 
 `cargo build && cargo test` hier; danach **alle drei Apps** bauen und testen (`cargo build && cargo test` in jeder).
@@ -34,6 +35,9 @@ fn main() -> glib::ExitCode {
 ```
 `install.sh` = `cargo build --release && ./target/release/<app> --install` (Programm nach `~/.local/bin`, Icon,
 Startmenü-Eintrag aus `[app]`; geprüft 2026-11-17: Einträge byte-gleich mit den früheren `.desktop`-Dateien).
+macOS: `--install` legt `~/Applications/<Titel>.app` (Info.plist, ohne Icon) an und `~/.local/bin/<app>` als Symlink darauf;
+GL-Funktionen dort aus `OpenGL.framework` (`player.rs`). Windows: `--install` geht nicht (kein HOME), das macht `install.ps1` der App.
+Die Install-Skripte (install.sh/.ps1, windows-bundle.sh) liegen gleich in allen Apps, beschrieben in `~/Work/aniqu/CLAUDE.md`.
 App-Code, der die Konfig braucht, testet mit `qu_core::config::load(include_str!("../qu.toml"))` zuerst.
 Im `build` der App:
 - `qu_core::style::install(&display, include_str!("style.css"))` (Theme, Icons, CSS-Schichten)
@@ -49,7 +53,7 @@ Im `build` der App:
 ```toml
 [app]
 name  = "tubequ"            # Ordner ~/.config/<name> …, Dev-Schalter <NAME>_DEV (eigene Instanz)
-title = "Tubequ"            # Fenstertitel
+title = "TubeQu"            # Fenstertitel
 id    = "dev.tubequ.Tubequ" # Application-ID / Fensterklasse / Icon-Name
 generic_name = "YouTube client"                     # Startmenü (optional)
 comment = "Ad-free YouTube: home feed, search, channels and live streams"
@@ -115,10 +119,10 @@ hier, nur App-Eigenes ins App-CSS.
 | `theme.rs` | Farben aus Omarchy `colors.toml`, Rundung aus Theme-`hyprland.lua`, Live-Reload; Fallback = Farben von „Last Horizon“ |
 | `style.css` | Gemeinsames Layout-CSS (`qu_core::CSS`; Bubbles, Timeline, Suche, Tabs, Platzhalter …), nutzt `--radius-*` aus `theme.rs`. Die App lädt `format!("{}{}", qu_core::CSS, <eigenes CSS>)` |
 | `icons.rs` | Icon-Satz (`data/icons/qu-*-symbolic.svg`, eingebettet, beim Start nach `~/.cache/<app>/icons`); neue Icons in `ICONS` eintragen (Arraylänge!). `spinner()` statt `gtk::Spinner` (friert in GTK 4.24 ein) |
-| `nav_shape.rs` | Selbst gezeichnete Form der Nav-Bubble: Pille → umgedrehtes L (Burger offen) → liegendes U (untere Reihe, `set_parts`, nur Tubequ). Ohne `set_parts` ist die obere Reihe so breit wie die ganze Box (AniQu/BoxQu-Verhalten) |
+| `nav_shape.rs` | Selbst gezeichnete Form der Nav-Bubble: Pille → umgedrehtes L (Burger offen) → liegendes U (untere Reihe, `set_parts`, nur TubeQu). Ohne `set_parts` ist die obere Reihe so breit wie die ganze Box (AniQu/BoxQu-Verhalten) |
 | `fly.rs` | Öffnen-Animation wie beim iPhone: `Zoom` umgibt die Ansehen-Seite; der Player (Anker) beginnt genau auf dem Startrechteck (Karte/Kachel, `fly::register` bzw. alter Player-Platz) und wächst 380 ms an seinen Platz, die Seite skaliert mit (nur Zeichnen, kein Layout pro Bild). Dahinter beim Großwerden ein abgedunkeltes Standbild der alten Seite (`backdrop`). `after(f)`: nach der Animation ausführen (Miniplayer-Knöpfe erst, wenn er klein ist). Stack-Wechsel von/zur Ansehen-Seite **ohne** Überblendung (sonst beim Schrumpfen dahinter schwarz). `contains` = false, damit der Zoom im Miniplayer-Modus keine Klicks schluckt. Aus bei `gtk-enable-animations=false` |
 | `smooth.rs` | Weiches Scrollen mit dem Mausrad (Raststufen gleiten, Touchpad bleibt bei GTK), Tastatur-Fokus im Raster |
-| `search.rs` | Schwebendes Suchfenster (wie Spotlight), `SearchModal::new(placeholder, suggest, on_search)`; Vorschläge von der App (`from_history()` = gefilterte letzte Suchen, Tubequ: YouTube). Suchverlauf `searches`/`add_search` in `~/.local/share/<app>/searches.txt` (8 Einträge) |
+| `search.rs` | Schwebendes Suchfenster (wie Spotlight), `SearchModal::new(placeholder, suggest, on_search)`; Vorschläge von der App (`from_history()` = gefilterte letzte Suchen, TubeQu: YouTube). Suchverlauf `searches`/`add_search` in `~/.local/share/<app>/searches.txt` (8 Einträge) |
 | `controls.rs` | Bedienleiste über dem Video (Timeline mit Kapiteln/Abschnitten/Storyboard-Vorschau, Play, Lautstärke weich, Zeit, Einstellungen Qualität/Tempo/Upscaling, Untertitel-Knopf: Linksklick/`c` an/aus, Rechtsklick Menü Sprache/Größe/Hintergrund, gespeichert in `subtitles`), Auto-Ausblenden. `connect_quality` (Player lädt Stufe neu; Apps mit yt-dlp ersetzen das), `set_storyboard`, `apply_subs`, `timeline_top`, `fmt_duration`. Einstellungen in `~/.config/<app>/` (`quality`, `volume`, `subtitles`) |
 | `player.rs` | `Player<M>`: libmpv in GtkGLArea (GL-Funktionen über `eglGetProcAddress`, unter Windows `wglGetProcAddress` + `opengl32.dll`), Meldungen/Spinner/Vorschaubild (`poster`), Endbildschirm (`end_next` setzt die App sichtbar), Abschnitte (Knopf oder automatisch), Einblendungen (nicht in den ersten 1,5 s), Fortschritt alle 5 s/bei Pause, Untertitel-Name aus `sub_tracks`. `Media` = was gespielt wird (Stufen, `loadfile`-Optionen via `quoted`/`header_opts`, Start, Tempo, live). `Hooks<M>`: `init` (mpv-Optionen, z. B. yt-dlp), `save`, `report` (+ `wait_at_most`), `segments`, `speed_changed`, `retry_opts` |
 | `segments.rs` | `Segment` (Start, Ende, Name), `segment_at`, `to_skip` |
@@ -135,7 +139,7 @@ hier, nur App-Eigenes ins App-CSS.
 **Alle Seiten bleiben in den Apps** (Startseite/Raster-Logik, Titel- bzw. Kanalseite, Infos unter dem Video), auch
 wenn sie sich bei AniQu/BoxQu ähneln. Der Kern liefert nur Bausteine dafür (`cards`, `WatchFrame::below`, `store` …).
 Außerdem in den Apps: Datenquelle (hianime, MovieBox, YouTube), was gespeichert wird (Fortschritts-Einträge mit eigenen Feldern, Watchlist/„Watch later“) und
-App-Eigenheiten (Tubequs Link-Weiche in `install.sh`, Kontozeile im Menü).
+App-Eigenheiten (TubeQus Link-Weiche in `install.sh`, Kontozeile im Menü).
 
 ## Regeln (gelten für alle Apps)
 

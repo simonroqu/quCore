@@ -128,7 +128,7 @@ pub struct Nav {
 }
 
 /// Eigener Menüeintrag: ein Knopf (Icon + Tooltip, die App hängt den Klick an) oder ein `slot`
-/// (leere Box, die App füllt sie selbst, z. B. Tubequs Kontozeile).
+/// (leere Box, die App füllt sie selbst, z. B. TubeQus Kontozeile).
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NavItem {
