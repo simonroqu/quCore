@@ -334,6 +334,7 @@ fun LazyGridScope.ghostTiles(n: Int) {
  * Kopf einer Detailseite wie am Desktop (`show.rs`): Bild links, großer Titel, Infozeile, Beschreibung mit
  * „Show more“, darunter `actions` (Tabs, Lesezeichen …).
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DetailHeader(
     title: String,
@@ -360,7 +361,11 @@ fun DetailHeader(
                     Text(if (more) "Show less" else "Show more", color = Fg)
                 }
             }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp), content = actions)
+            // Umbrechen statt quetschen: viele Sprach-Tabs (BoxQu) schieben sonst das Lesezeichen aus dem Bild.
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                itemVerticalAlignment = Alignment.CenterVertically,
+            ) { actions() }
         }
     }
 }
