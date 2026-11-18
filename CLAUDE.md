@@ -138,6 +138,21 @@ hier, nur App-Eigenes ins App-CSS.
 | `install.rs` | `<app> --install` (siehe oben) |
 | `upscale.rs` | Upscaling im Player-Einstellungsmenü: Off (`scale=lanczos`), Sharp (`ewa_lanczossharp`), AI. Shader-Set wählt die App (`Shaders::Fsrcnnx` = FSRCNNX_x2_16-0-4-1, nur Luma von YUV, ab Vergrößerung > 1,3; `Shaders::Anime4k` = Mode A HQ). Shader eingebettet (`data/shaders/`, Lizenzen daneben), beim ersten Gebrauch nach `~/.cache/<app>/shaders/`, per `change-list glsl-shaders`. Gespeichert in `~/.config/<app>/upscaling`. Geprüft 2026-11-17 (RTX 4070 Ti SUPER, `vo-passes`). RTX Video Super Resolution gibt es in mpv unter Linux nicht |
 
+## Android (`android/`, Stand 2026-11-18)
+
+Gemeinsame Android-Bausteine aller Qu-Apps (Kotlin/Compose, Paket `dev.roqu.qu`), wie `src/` am Desktop:
+| Datei | Aufgabe |
+|---|---|
+| `src/dev/roqu/qu/Ui.kt` | `QuTheme` (Farben = `DEFAULT_COLORS`), `Nav<P>` (Seitenstapel), `QuApp` (Seite + Nav-Bubble Zurück/Home/Suche + App-Knöpfe, Spotlight-Suche mit Verlauf, Zurück-Taste, Fokus Bubble → Seite), `tvFocus`, `glass`, `IconButton`, `Grid`, `PosterCard`, `ghosts`, `header`, `note`, `wide`, `TabButton`, `Tile`, `ghostTiles`, `DetailHeader` |
+| `src/dev/roqu/qu/Player.kt` | `VideoPlayer(load, message, save, skips, next)` mit `Video` (HLS/DASH/Datei, getrennte Tonspur, Header, Untertitel, Start, Tempo, live), `Skip`, `Subtitle`, `Fullscreen` |
+| `src/dev/roqu/qu/Icons.kt` | `QuIcons.*` aus `data/icons`, erzeugt von `python3 android/icons.py <namen…>` (immer die ganze Liste) |
+| `build-rust.sh` | baut den FFI-Crate der App (`sh <qu-core>/android/build-rust.sh <app>-ffi`, aus dem `android/`-Ordner der App) |
+
+Die Apps finden den Ordner über `cargo metadata` (Gradle, `app/build.gradle.kts`: `sourceSets["main"].kotlin.srcDir`) –
+gleicher Stand wie der Rust-Teil, lokal der Patch. Werkzeuge, Waydroid-Test und Fernbedienungs-Regeln: `~/Work/aniqu/CLAUDE.md`
+(Abschnitt Android). Seiten bleiben in den Apps (wie am Desktop). Abhängigkeiten (Compose, Coil, Media3 inkl. HLS/DASH)
+trägt jede App in ihrer `build.gradle.kts` ein.
+
 ## Was bewusst in den Apps bleibt (so entschieden – nicht ohne Rückfrage ändern)
 
 **Alle Seiten bleiben in den Apps** (Startseite/Raster-Logik, Titel- bzw. Kanalseite, Infos unter dem Video), auch
