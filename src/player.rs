@@ -761,7 +761,14 @@ impl<M: Clone + 'static> Player<M> {
                                     again
                                 };
                                 if let Some((url, opts)) = again {
-                                    let _ = mpv.command("loadfile", &[&url, "replace", "-1", &opts]);
+                                    // Kurz warten: eine Sperre des CDN (429/428) ist sofort danach meist noch aktiv.
+                                    // Nur laden, wenn inzwischen kein anderes Video gestartet wurde.
+                                    let track = track.clone();
+                                    glib::timeout_add_local_once(Duration::from_millis(1500), move || {
+                                        if track.borrow().load.as_ref().is_some_and(|(u, _)| *u == url) {
+                                            let _ = mpv.command("loadfile", &[&url, "replace", "-1", &opts]);
+                                        }
+                                    });
                                 } else {
                                     let why = reason(&log, &e.to_string());
                                     spinner.set_visible(false);
