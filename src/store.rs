@@ -46,6 +46,24 @@ pub fn set_speed(key: &str, speed: f64) {
     put("speeds.tsv", key, (speed != 1.0).then(|| speed.to_string()));
 }
 
+/// So viele letzte Suchen merken (`~/.local/share/<app>/searches.txt`).
+const SEARCHES_MAX: usize = 8;
+
+/// Letzte Suchen, neueste zuerst.
+pub fn searches() -> Vec<String> {
+    std::fs::read_to_string(data_file("searches.txt")).unwrap_or_default().lines().map(String::from).collect()
+}
+
+pub fn add_search(q: &str) {
+    let mut list = searches();
+    list.retain(|s| s != q);
+    list.insert(0, q.replace('\n', " "));
+    list.truncate(SEARCHES_MAX);
+    let path = data_file("searches.txt");
+    let _ = std::fs::create_dir_all(path.parent().unwrap());
+    let _ = std::fs::write(path, list.join("\n"));
+}
+
 #[cfg(test)]
 mod tests {
     #[test]

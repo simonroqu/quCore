@@ -15,23 +15,8 @@ pub type Suggest = Rc<dyn Fn(String) -> Pin<Box<dyn Future<Output = Vec<String>>
 
 /// Höchstens so viele Vorschläge.
 const MAX_SUGGESTIONS: usize = 8;
-/// So viele letzte Suchen merken (`~/.local/share/<app>/searches.txt`).
-const SEARCHES_MAX: usize = 8;
-
-/// Letzte Suchen, neueste zuerst.
-pub fn searches() -> Vec<String> {
-    std::fs::read_to_string(crate::app::data_file("searches.txt")).unwrap_or_default().lines().map(String::from).collect()
-}
-
-pub fn add_search(q: &str) {
-    let mut list = searches();
-    list.retain(|s| s != q);
-    list.insert(0, q.replace('\n', " "));
-    list.truncate(SEARCHES_MAX);
-    let path = crate::app::data_file("searches.txt");
-    let _ = std::fs::create_dir_all(path.parent().unwrap());
-    let _ = std::fs::write(path, list.join("\n"));
-}
+// Suchverlauf liegt in `store` (ohne GTK, auch für Android); hier weiter erreichbar.
+pub use crate::store::{add_search, searches};
 
 /// Vorschläge ohne Netz: die letzten Suchen, die den Text enthalten.
 pub fn from_history() -> Suggest {
