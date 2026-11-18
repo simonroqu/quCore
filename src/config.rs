@@ -196,6 +196,7 @@ impl Config {
 }
 
 /// Eigener Eintrag zu einer ID (nach `parse` gibt es ihn sicher).
+#[cfg(feature = "gui")]
 pub(crate) fn get_item<'a>(nav: &'a Nav, id: &str) -> &'a NavItem {
     nav.items.iter().find(|i| i.id == id).unwrap_or_else(|| panic!("qu.toml: [[nav.item]] „{id}“ fehlt"))
 }

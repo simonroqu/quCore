@@ -3,6 +3,9 @@
 //! Bild größer gezeichnet wird als das Video (z. B. 1080p im Vollbild auf 1440p). NVIDIAs RTX Video Super
 //! Resolution kann mpv unter Linux nicht ansprechen.
 
+#![cfg_attr(not(feature = "gui"), allow(dead_code))] // ohne GUI bleibt nur `Shaders` (für qu.toml)
+
+#[cfg(feature = "gui")]
 use libmpv2::Mpv;
 
 /// Shader-Set für „AI“ (`[player] upscaler` in qu.toml: `fsrcnnx`, `anime4k`).
@@ -52,6 +55,7 @@ pub fn saved() -> &'static str {
     ["off", "sharp", "ai"].into_iter().find(|m| *m == s.trim()).unwrap_or("off")
 }
 
+#[cfg(feature = "gui")]
 /// Stufe anwenden (geht auch während das Video läuft).
 pub fn apply(mpv: &Mpv, mode: &str, shaders: Shaders) {
     let _ = mpv.set_property("scale", if mode == "off" { "lanczos" } else { "ewa_lanczossharp" });
@@ -71,6 +75,7 @@ pub fn apply(mpv: &Mpv, mode: &str, shaders: Shaders) {
     }
 }
 
+#[cfg(feature = "gui")]
 /// Stufe wählen: anwenden und merken.
 pub fn set(mpv: &Mpv, mode: &str, shaders: Shaders) {
     apply(mpv, mode, shaders);

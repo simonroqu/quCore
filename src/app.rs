@@ -18,6 +18,21 @@ pub fn name() -> &'static str {
     })
 }
 
+/// Feste Ordner statt XDG/HOME (Android: `filesDir`, `cacheDir`): Einstellungen und Daten unter `files/<app>/`,
+/// Cache unter `cache/<app>/`. Vor dem ersten Zugriff aufrufen.
+pub fn set_dirs(files: PathBuf, cache: PathBuf) {
+    let _ = DIRS.set((files, cache));
+}
+
+static DIRS: OnceLock<(PathBuf, PathBuf)> = OnceLock::new();
+
+fn base(var: &str, fallback: &str) -> PathBuf {
+    match DIRS.get() {
+        Some((files, cache)) => if var == "XDG_CACHE_HOME" { cache.clone() } else { files.clone() },
+        None => xdg(var, fallback),
+    }
+}
+
 // Windows hat weder XDG noch HOME: Einstellungen und Daten nach %APPDATA%\<app>, Cache nach %LOCALAPPDATA%\<app>.
 #[cfg(windows)]
 fn xdg(var: &str, _: &str) -> PathBuf {
@@ -34,15 +49,15 @@ fn xdg(var: &str, fallback: &str) -> PathBuf {
 
 /// Datei in `~/.config/<app>/` (Einstellungen).
 pub fn config_file(file: &str) -> PathBuf {
-    xdg("XDG_CONFIG_HOME", ".config").join(name()).join(file)
+    base("XDG_CONFIG_HOME", ".config").join(name()).join(file)
 }
 
 /// Datei in `~/.local/share/<app>/` (Fortschritt, Listen).
 pub fn data_file(file: &str) -> PathBuf {
-    xdg("XDG_DATA_HOME", ".local/share").join(name()).join(file)
+    base("XDG_DATA_HOME", ".local/share").join(name()).join(file)
 }
 
 /// `~/.cache/<app>/` (Poster, Icons, Shader).
 pub fn cache_dir() -> PathBuf {
-    xdg("XDG_CACHE_HOME", ".cache").join(name())
+    base("XDG_CACHE_HOME", ".cache").join(name())
 }

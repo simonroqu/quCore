@@ -23,7 +23,11 @@ per `cargo update -p qu-core` (Cargo.lock hält sonst den alten fest). Achtung: 
 Installation in allen Apps, also nur Funktionierendes pushen. Ein Lockfile, das mit der lokalen Umleitung entstand, enthält keine Quelle für qu-core – Cargo
 ergänzt sie beim Bauen ohne Umleitung selbst (geprüft 2026-11-17, auch mit `--release`).
 
-`cargo build && cargo test` hier; danach **alle drei Apps** bauen und testen (`cargo build && cargo test` in jeder).
+Feature `gui` (Standard): alles mit GTK/libmpv. Ohne (`default-features = false`) bleiben `app` (Ordner; `set_dirs` für
+Android), `config`, `progress`, `segments`, `store`, `Shaders` und `RT`/`bg` – für App-Logik ohne Oberfläche (z. B. `aniqu-core`).
+Neues ohne GTK dort lassen, GTK-Code hinter `#[cfg(feature = "gui")]`.
+
+`cargo build && cargo test` hier, zusätzlich `cargo build --no-default-features`; danach **alle drei Apps** bauen und testen (`cargo build && cargo test` in jeder).
 
 ## Eine Qu-App = `qu.toml` + Icon + `style.css` (optional) + eigener Code
 
