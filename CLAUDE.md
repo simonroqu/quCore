@@ -144,7 +144,7 @@ Gemeinsame Android-Bausteine aller Qu-Apps (Kotlin/Compose, Paket `dev.roqu.qu`)
 | Datei | Aufgabe |
 |---|---|
 | `src/dev/roqu/qu/Ui.kt` | `QuTheme` (Farben = `DEFAULT_COLORS`), `Nav<P>` (Seitenstapel), `QuApp` (Seite + Nav-Bubble Zurück/Home/Suche + App-Knöpfe, Spotlight-Suche mit Verlauf, Zurück-Taste, Fokus Bubble → Seite), `tvFocus`, `glass`, `IconButton`, `Grid` (+ `nearEnd` fürs Nachladen), `PosterCard` (Badge: Dauer/„● LIVE“), `header`, `note`, `wide`, `TabButton`, `Tile`, `ghostTiles`, `DetailHeader` |
-| `src/dev/roqu/qu/Player.kt` | `VideoPlayer(load, message, save, skips, next, autoSkip)` (`autoSkip` wie `segments = "auto"`) mit `Video` (HLS/DASH/Datei, getrennte Tonspur, Header, Untertitel, Start, Tempo, live), `Skip`, `Subtitle`, `Fullscreen` |
+| `src/dev/roqu/qu/Player.kt` | `VideoPlayer(load, message, save, skips, next, autoSkip)` (`autoSkip` wie `segments = "auto"`) mit `Video` (HLS/DASH/Datei/`data:`-Manifest, getrennte Tonspur mit `audioMime`, Header, Untertitel, Start, Tempo, live), `Skip`, `Subtitle`, `Fullscreen` |
 | `src/dev/roqu/qu/Icons.kt` | `QuIcons.*` aus `data/icons`, erzeugt von `python3 android/icons.py <namen…>` (immer die ganze Liste) |
 | `build-rust.sh` | baut den FFI-Crate der App (`sh <qu-core>/android/build-rust.sh <app>-ffi`, aus dem `android/`-Ordner der App). bindgen-Ziele (rquickjs in TubeQu) bekommen `__ANDROID_MIN_SDK_VERSION__` über `BINDGEN_EXTRA_CLANG_ARGS_<ziel-mit-bindestrichen>` (cargo-ndk setzt nur die Unterstrich-Form) |
 

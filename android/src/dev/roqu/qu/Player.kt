@@ -52,13 +52,15 @@ data class Skip(val start: Double, val end: Double, val label: String)
 
 /**
  * Was gespielt wird. `mime`: `MimeTypes.APPLICATION_M3U8` (HLS), `APPLICATION_MPD` (DASH) oder null (erkennt
- * ExoPlayer an der Adresse/Datei). `audio`: eigene Tonspur (YouTube liefert Bild und Ton getrennt).
+ * ExoPlayer an der Adresse/Datei). `audio`: eigene Tonspur (YouTube liefert Bild und Ton getrennt), `audioMime` wie `mime`.
+ * Auch `data:`-Adressen gehen (z. B. ein selbst gebautes DASH-Manifest).
  * `start` in Sekunden (Fortsetzen), `live` = keine Fortschritts-Speicherung.
  */
 data class Video(
     val url: String,
     val mime: String? = null,
     val audio: String? = null,
+    val audioMime: String? = null,
     val headers: Map<String, String> = emptyMap(),
     val userAgent: String? = null,
     val subtitles: List<Subtitle> = emptyList(),
@@ -154,7 +156,7 @@ fun VideoPlayer(
             val video = source.createMediaSource(item)
             player.setMediaSource(
                 if (v.audio == null) video
-                else MergingMediaSource(video, source.createMediaSource(MediaItem.fromUri(v.audio))),
+                else MergingMediaSource(video, source.createMediaSource(MediaItem.Builder().setUri(v.audio).setMimeType(v.audioMime).build())),
             )
             v.start?.let { player.seekTo((it * 1000).toLong()) }
             player.setPlaybackSpeed(v.speed)
