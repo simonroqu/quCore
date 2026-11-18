@@ -133,7 +133,7 @@ hier, nur App-Eigenes ins App-CSS.
 | `watch.rs` | `WatchFrame`: Player so hoch wie das Video, mittig mit Rand (85 % ab 1600 px), Strg+Mausrad-Breite (`player-width`), Vollbild, Miniplayer in der Ecke; `below` für die Infos der App; `reset` bei neuem Video |
 | `nav.rs` | `Shell` (Fenster, `stack`, `page_layer`, Menü) und `Nav<M>` (Verlauf `go`/`back`/`forward`/`home`, Ansehen-Seite als Ebene, Miniplayer mit Knöpfen, ziehen → nächste Ecke, Zoom-Animation, Menü/Leiste blenden gemeinsam ein) |
 | `store.rs` | Dateien in `~/.local/share/<app>/`: `read`, `write` (über Hilfsdatei + Umbenennen), Tabellen `lookup`/`put` (`key<TAB>wert`), Tempo pro Titel/Kanal `speed`/`set_speed` (`speeds.tsv`) |
-| `progress.rs` | Fortschrittsregeln aus `[progress]`: `worth_saving`, `finished`, `fraction`, `resume_from`. Speichern (eigene Felder) macht die App |
+| `progress.rs` | Fortschrittsregeln aus `[progress]`: `worth_saving`, `finished`, `fraction`, `resume_from`, `fmt_duration` (ohne GTK, in `controls` re-exportiert). Speichern (eigene Felder) macht die App |
 | `cards.rs` | Raster-Bausteine aus `[grid]`: `columns`, `step_columns`, `image_height`, `label`, `part`, `ghost_card`, `COLUMN_SPACING`, `TOP_MARGIN` |
 | `install.rs` | `<app> --install` (siehe oben) |
 | `upscale.rs` | Upscaling im Player-Einstellungsmenü: Off (`scale=lanczos`), Sharp (`ewa_lanczossharp`), AI. Shader-Set wählt die App (`Shaders::Fsrcnnx` = FSRCNNX_x2_16-0-4-1, nur Luma von YUV, ab Vergrößerung > 1,3; `Shaders::Anime4k` = Mode A HQ). Shader eingebettet (`data/shaders/`, Lizenzen daneben), beim ersten Gebrauch nach `~/.cache/<app>/shaders/`, per `change-list glsl-shaders`. Gespeichert in `~/.config/<app>/upscaling`. Geprüft 2026-11-17 (RTX 4070 Ti SUPER, `vo-passes`). RTX Video Super Resolution gibt es in mpv unter Linux nicht |
@@ -143,10 +143,10 @@ hier, nur App-Eigenes ins App-CSS.
 Gemeinsame Android-Bausteine aller Qu-Apps (Kotlin/Compose, Paket `dev.roqu.qu`), wie `src/` am Desktop:
 | Datei | Aufgabe |
 |---|---|
-| `src/dev/roqu/qu/Ui.kt` | `QuTheme` (Farben = `DEFAULT_COLORS`), `Nav<P>` (Seitenstapel), `QuApp` (Seite + Nav-Bubble Zurück/Home/Suche + App-Knöpfe, Spotlight-Suche mit Verlauf, Zurück-Taste, Fokus Bubble → Seite), `tvFocus`, `glass`, `IconButton`, `Grid`, `PosterCard`, `ghosts`, `header`, `note`, `wide`, `TabButton`, `Tile`, `ghostTiles`, `DetailHeader` |
-| `src/dev/roqu/qu/Player.kt` | `VideoPlayer(load, message, save, skips, next)` mit `Video` (HLS/DASH/Datei, getrennte Tonspur, Header, Untertitel, Start, Tempo, live), `Skip`, `Subtitle`, `Fullscreen` |
+| `src/dev/roqu/qu/Ui.kt` | `QuTheme` (Farben = `DEFAULT_COLORS`), `Nav<P>` (Seitenstapel), `QuApp` (Seite + Nav-Bubble Zurück/Home/Suche + App-Knöpfe, Spotlight-Suche mit Verlauf, Zurück-Taste, Fokus Bubble → Seite), `tvFocus`, `glass`, `IconButton`, `Grid` (+ `nearEnd` fürs Nachladen), `PosterCard` (Badge: Dauer/„● LIVE“), `header`, `note`, `wide`, `TabButton`, `Tile`, `ghostTiles`, `DetailHeader` |
+| `src/dev/roqu/qu/Player.kt` | `VideoPlayer(load, message, save, skips, next, autoSkip)` (`autoSkip` wie `segments = "auto"`) mit `Video` (HLS/DASH/Datei, getrennte Tonspur, Header, Untertitel, Start, Tempo, live), `Skip`, `Subtitle`, `Fullscreen` |
 | `src/dev/roqu/qu/Icons.kt` | `QuIcons.*` aus `data/icons`, erzeugt von `python3 android/icons.py <namen…>` (immer die ganze Liste) |
-| `build-rust.sh` | baut den FFI-Crate der App (`sh <qu-core>/android/build-rust.sh <app>-ffi`, aus dem `android/`-Ordner der App) |
+| `build-rust.sh` | baut den FFI-Crate der App (`sh <qu-core>/android/build-rust.sh <app>-ffi`, aus dem `android/`-Ordner der App). bindgen-Ziele (rquickjs in TubeQu) bekommen `__ANDROID_MIN_SDK_VERSION__` über `BINDGEN_EXTRA_CLANG_ARGS_<ziel-mit-bindestrichen>` (cargo-ndk setzt nur die Unterstrich-Form) |
 
 Die Apps finden den Ordner über `cargo metadata` (Gradle, `app/build.gradle.kts`: `sourceSets["main"].kotlin.srcDir`) –
 gleicher Stand wie der Rust-Teil, lokal der Patch. Werkzeuge, Waydroid-Test und Fernbedienungs-Regeln: `~/Work/aniqu/CLAUDE.md`

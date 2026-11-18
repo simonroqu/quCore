@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -220,7 +222,8 @@ fun SearchModal(placeholder: String, searches: () -> List<String>, close: () -> 
     }
 }
 
-/** Karte im Raster: Bild (`ratio` = Breite/Höhe, Poster 2:3, Videos 16:9), fetter Titel, Zusatzzeile, Fortschritt. */
+/** Karte im Raster: Bild (`ratio` = Breite/Höhe, Poster 2:3, Videos 16:9), fetter Titel, Zusatzzeile, Fortschritt,
+ *  `badge` unten rechts im Bild (Dauer, „● LIVE“ in Rot). */
 @Composable
 fun PosterCard(
     title: String,
@@ -228,6 +231,7 @@ fun PosterCard(
     ratio: Float = 2f / 3f,
     label: String? = null,
     fraction: Double? = null,
+    badge: String? = null,
     onClick: () -> Unit,
 ) {
     Column(Modifier.tvFocus().clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick).padding(4.dp)) {
@@ -238,6 +242,16 @@ fun PosterCard(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxWidth().aspectRatio(ratio).clip(RoundedCornerShape(8.dp)).background(TileBg),
             )
+            if (badge != null) {
+                Text(
+                    badge,
+                    color = if (badge.startsWith("●")) Red else Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp)
+                        .background(Color(0xB3000000), RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 2.dp),
+                )
+            }
             if (fraction != null) {
                 LinearProgressIndicator(
                     progress = { fraction.toFloat() },
@@ -280,11 +294,13 @@ fun LazyGridScope.wide(content: @Composable () -> Unit) {
     item(span = { GridItemSpan(maxLineSpan) }) { content() }
 }
 
-/** Seite als Raster unter der Nav-Bubble. `minWidth`: Karten so breit (Poster 120 dp, Videos 260 dp). */
+/** Seite als Raster unter der Nav-Bubble. `minWidth`: Karten so breit (Poster 120 dp, Videos 260 dp). `state` z. B. fürs
+ *  Nachladen am Ende (`nearEnd`). */
 @Composable
-fun Grid(minWidth: Dp = 120.dp, content: LazyGridScope.() -> Unit) {
+fun Grid(minWidth: Dp = 120.dp, state: LazyGridState = rememberLazyGridState(), content: LazyGridScope.() -> Unit) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minWidth),
+        state = state,
         contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = TopSpace, bottom = 24.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -368,4 +384,10 @@ fun DetailHeader(
             ) { actions() }
         }
     }
+}
+
+/** Fast am Ende angekommen (weniger als `rest` Einträge übrig)? Für Nachladen: erst dann, nicht vorab (jede Seite kostet). */
+fun LazyGridState.nearEnd(rest: Int = 6): Boolean {
+    val last = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: return false
+    return last >= layoutInfo.totalItemsCount - rest
 }

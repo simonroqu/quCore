@@ -39,11 +39,8 @@ fn quality_file() -> std::path::PathBuf {
     config_file("quality")
 }
 
-/// Laufzeit als „1:02:03“ bzw. „2:03“.
-pub fn fmt_duration(s: u32) -> String {
-    let (h, m, s) = (s / 3600, s / 60 % 60, s % 60);
-    if h > 0 { format!("{h}:{m:02}:{s:02}") } else { format!("{m}:{s:02}") }
-}
+// Liegt in `progress` (ohne GTK); hier weiter erreichbar.
+pub use crate::progress::fmt_duration;
 
 /// Ein-/Ausblenden des Tons und Lautstärke-Rampen: so viele Schritte in diesem Abstand (zusammen 160 ms).
 const FADE_STEPS: u32 = 8;

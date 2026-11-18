@@ -86,7 +86,8 @@ fun Fullscreen() {
 /**
  * Player-Seite. `load` holt das Video (Fehlertext über `message`), `skips` läuft danach (darf Werte aus `load`
  * nutzen). `save(pos, dur)` alle 5 s, am Ende und beim Verlassen. `next` = nächstes Video (Knopf und am Ende);
- * null = kein „Weiter“-Knopf.
+ * null = kein „Weiter“-Knopf. `autoSkip` = Abschnitte selbst überspringen (wie `[player] segments = "auto"`, TubeQu:
+ * SponsorBlock), sonst Knopf „Skip …“.
  */
 @OptIn(UnstableApi::class)
 @Composable
@@ -96,6 +97,7 @@ fun VideoPlayer(
     save: (pos: Double, dur: Double) -> Unit,
     skips: suspend () -> List<Skip> = { emptyList() },
     next: (() -> Unit)? = null,
+    autoSkip: Boolean = false,
 ) {
     val ctx = LocalContext.current
     val player = remember { ExoPlayer.Builder(ctx).build() }
@@ -171,10 +173,15 @@ fun VideoPlayer(
     // Skip-Knopf und Fortschritt (alle 5 s).
     LaunchedEffect(player) {
         var tick = 0
+        val skipped = mutableSetOf<Skip>()
         while (true) {
             delay(500)
             val pos = player.currentPosition / 1000.0
-            skip = segs.firstOrNull { pos >= it.start && pos < it.end - 0.5 }
+            val inside = segs.firstOrNull { pos >= it.start && pos < it.end - 0.5 }
+            // Automatisch nur einmal je Abschnitt (wer zurückspult, will ihn sehen).
+            if (autoSkip) {
+                if (inside != null && skipped.add(inside)) player.seekTo((inside.end * 1000).toLong())
+            } else skip = inside
             if (++tick % 10 == 0 && player.isPlaying) store()
         }
     }
