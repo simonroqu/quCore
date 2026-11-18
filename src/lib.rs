@@ -30,6 +30,7 @@ pub mod segments;
 #[cfg(feature = "gui")]
 pub mod smooth;
 pub mod store;
+pub mod storyboard;
 #[cfg(feature = "gui")]
 pub mod style;
 #[cfg(feature = "gui")]
